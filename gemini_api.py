@@ -1,55 +1,47 @@
 import google.generativeai as genai
-from google.ai.generativelanguage_v1beta.types import content
 import os
-
 from dotenv import load_dotenv
 
+# Load API key from environment variables
 load_dotenv()
 
-instructions = """
-C0805C274K1RACTU Multilayer Ceramic Capacitors MLCC - SMD/SMT 100V 0.27uF X7R 0805 10% Temp Stable
-"""
-
+# Configure the API key
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
-# Create the model
-generation_config = {
-  "temperature": 1,
-  "top_p": 0.95,
-  "top_k": 40,
-  "max_output_tokens": 8192,
-  "response_schema": content.Schema(
-    type = content.Type.OBJECT,
-    properties = {
-      "capacitance": content.Schema(
-        type = content.Type.NUMBER,
-      ),
-      "capacitance_units": content.Schema(
-        type = content.Type.STRING,
-      ),
-      "case_code": content.Schema(
-        type = content.Type.STRING,
-      ),
-      "voltage": content.Schema(
-        type = content.Type.NUMBER,
-      ),
-      "voltage_units": content.Schema(
-        type = content.Type.STRING,
-      ),
-    },
-  ),
-  "response_mime_type": "application/json",
-}
 
+# Define system instructions for the model
+instructions = """
+You are an assistant designed to parse capacitor details into JSON format. 
+When given a description of a capacitor, extract and return the following fields:
+Capacitance, Capacitance Units, Voltage, Voltage Units, Dielectric Type, Case Code, Tolerance, Mount Type
+If information is missing, return null for those fields.
+If you have been asked any question that is not related to parsing the part, 
+then answer using response exactly as "I can only parse part attributes."
+"""
 model = genai.GenerativeModel(
-  model_name="gemini-1.5-flash",
-  generation_config=generation_config,
-  system_instruction=instructions
+    model_name="gemini-1.5-flash",
+    system_instruction=instructions
 )
 
-
+# Function to query the model and return structured JSON
 def gemini_model(user_prompt):
-    # response = model.generate_content(user_prompt, tools='google_search_retrieval')
-    response = model.generate_content(user_prompt)
-    print(response.text)
+    # Combine instructions with the user prompt
+    # full_prompt = instructions + "\n\n" + user_prompt
+    # print(full_prompt)
+
+    # Generate content using the AI model
+    response = model.generate_content(
+        user_prompt
+    )
+
+    # Print and return the generated text
+    # print(response.text)
     return response.text
+
+
+# Example usage
+if __name__ == "__main__":
+    user_prompt = "C0805C274K1RACTU Multilayer Ceramic Capacitors MLCC - SMD/SMT 100V 0.27uF X7R 0805 10% Temp Stable"
+    # user_prompt = "Who is the Prime minister of Canada?"
+    response = gemini_model(user_prompt)
+    print(response)
