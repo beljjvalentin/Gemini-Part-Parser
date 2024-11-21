@@ -14,18 +14,15 @@ class TestPartAPI(unittest.TestCase):
             mfg_part_num = response['SearchResults']['Parts'][0]['ManufacturerPartNumber']
             prompt = mfg_part_num + ' ' + description
             response = gemini_model(user_prompt=prompt)
-            print(response)
 
             # Remove the first 4 characters ("json")
             cleaned_response = response[8:-4]
-            print(cleaned_response)
 
             # Validate if the response is valid JSON
             try:
                 parsed_response = json.loads(cleaned_response)
             except json.JSONDecodeError:
                 self.fail("The response is not valid JSON.")
-            print(parsed_response)
             # Additional assertions for specific fields
             expected_keys = [
                 "Capacitance", "Capacitance Units", "Voltage",
