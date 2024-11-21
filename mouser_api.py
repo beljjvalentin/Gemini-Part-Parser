@@ -59,12 +59,13 @@ def search_mouser(parts_to_search, records=20, starting_record=0):
 
 if __name__ == "__main__":
     # Example part number to search
-    parts_to_search = "LM317T"
+    parts_to_search = "C0805C274K1RACAUTO"
 
     print("Searching Mouser for part:", parts_to_search)
     response = search_mouser(parts_to_search)
     if response:
         print("Search results:")
-        print(response)
+        print(response['SearchResults']['Parts'][0]['Description'])
+        print(response['SearchResults']['Parts'][0]['ManufacturerPartNumber'])
     else:
         print("Failed to retrieve search results.")
