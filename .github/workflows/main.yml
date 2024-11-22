@@ -76,12 +76,12 @@ jobs:
     steps:
       - name: Remove old container
         run: |
-          docker rm -f gemini-app-1 || true
+          docker rm -f gemini-app || true
 
       - name: Deploy the image
         # -d runs the container in the background
         run: |
-          docker run -d --name gemini-app-1 -p 8080:5000 \
+          docker run -d --name gemini-app -p 8080:5000 \
           -e MONGODB_USERNAME=${{ secrets.MONGODB_USERNAME }} \
           -e MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }} \
-          gemini-app-1:v1.0.0
+          gemini-app:v1.0.0
