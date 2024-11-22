@@ -1,0 +1,21 @@
+# Test Image Dockerfile
+
+# The base image which can be selected from: https://hub.docker.com/search
+FROM python:3.9-slim
+
+# To define the working directory
+# 'WORKDIR /'  means root of the base image
+WORKDIR /
+
+# To copy the files to the working directory
+COPY . .
+
+# this line will overwrite dockerignore and adds /tests direcotry into the docker image
+COPY /tests /tests
+
+# To install the dependency
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# The following command first finds all of the test files within the "tests" directory, then runs them.
+CMD ["python", "-m", "unittest", "discover", "-s", "tests"]
