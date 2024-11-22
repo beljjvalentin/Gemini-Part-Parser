@@ -1,0 +1,87 @@
+# Trigger of the pipeline
+on:
+  # Initiate the pipeline when there is a push event in the main branch
+  push:
+    branches:
+      - main
+
+# Global variables
+env:
+  DOCKERHUB_NAMESPACE: beljjvalentin
+  DOCKERHUB_REPOSITORY: gemini-api
+  DOCKERHUB_TEST_REPOSITORY: gemini-api-test
+  IMAGE_VERSION: v1.0.0
+
+jobs:
+  # Stage 1: Building the Docker image
+  build-docker-image:
+    name: Build the application Docker image
+    runs-on: self-hosted  # Using the self-hosted runner
+    environment: development # this allows GitHub to access secrets in the development environment
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2  # Clones the project into the working directory
+
+      # This GitHub action handles the authentication with an artifact registry
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build Main Docker Image
+        run: |
+          docker build -t $DOCKERHUB_NAMESPACE/$DOCKERHUB_REPOSITORY:$IMAGE_VERSION -f Dockerfile .
+          docker push $DOCKERHUB_NAMESPACE/$DOCKERHUB_REPOSITORY:$IMAGE_VERSION
+
+      - name: Build Test Docker Image
+        run: |
+          mv .dockerignore .dockerignore.temp
+          docker build -t $DOCKERHUB_NAMESPACE/$DOCKERHUB_TEST_REPOSITORY:$IMAGE_VERSION -f DockerfileTest .
+          mv .dockerignore.temp .dockerignore
+
+      - name: Push Test Docker Image
+        run: docker push $DOCKERHUB_NAMESPACE/$DOCKERHUB_TEST_REPOSITORY:$IMAGE_VERSION
+
+  # Stage 2: Unit testing the application
+  test:
+    name: Unit testing of the application
+    needs: [build-docker-image]
+    runs-on: self-hosted # Using the self-hosted runner
+    environment: development
+    steps:
+      # This GitHub action handles the authentication with an artifact registry
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Pull Test Docker Image
+        run: docker pull $DOCKERHUB_NAMESPACE/$DOCKERHUB_TEST_REPOSITORY:$IMAGE_VERSION
+
+      - name: Run Test Docker Image
+        run: |
+          docker run --rm \
+            -e MONGODB_USERNAME=${{ secrets.MONGODB_USERNAME }} \
+            -e MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }} \
+            $DOCKERHUB_NAMESPACE/$DOCKERHUB_TEST_REPOSITORY:$IMAGE_VERSION
+
+  # Stage 3: Deploy the Docker image
+  deploy-docker-image:
+    name: Deploy the Gemini API image
+    needs: [build-docker-image]
+    runs-on: self-hosted # Using the self-hosted runner
+    environment: development  # This tells GitHub where to get the secrets
+    steps:
+      - name: Remove old container
+        run: |
+          docker rm -f gemini-app-1 || true
+
+      - name: Deploy the image
+        # -d runs the container in the background
+        run: |
+          docker run -d --name gemini-app-1 -p 8080:5000 \
+          -e MONGODB_USERNAME=${{ secrets.MONGODB_USERNAME }} \
+          -e MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }} \
+          gemini-app-1:v1.0.0
