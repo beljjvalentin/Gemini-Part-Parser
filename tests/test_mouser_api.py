@@ -9,7 +9,6 @@ class TestMouserAPI(unittest.TestCase):
         # Example part number to search
         parts_to_search = "C0805C274K1RACTU"
 
-        print("Searching Mouser for part:", parts_to_search)
         response = search_mouser(parts_to_search)
 
         self.assertIsNotNone(response)
@@ -20,11 +19,11 @@ class TestMouserAPI(unittest.TestCase):
     # Invalid here means no response or invalid response
     def test_invalid_prompt(self):
         # Example part number to search
-        parts_to_search = "C0402C101KCGACAUTO"
+        parts_to_search = "Bw4Aij7tfUsUA1FU"
 
-        print("Searching Mouser for part:", parts_to_search)
         response = search_mouser(parts_to_search)
 
         self.assertIsNotNone(response)
         self.assertIn('SearchResults', response)
-        self.assertNotEqual(response['SearchResults']['Parts'][0]['Manufacturer'], 'Samsung')
+        self.assertEqual(response['SearchResults']['NumberOfResult'], 0)
+        self.assertEqual(response["SearchResults"]["Parts"], [])

@@ -32,5 +32,16 @@ class TestPartAPI(unittest.TestCase):
             self.assertTrue(all(key in parsed_response for key in expected_keys),
                             "Not all expected keys are present in the response.")
 
-        else :
+        else:
             self.fail("Didn't get Mouser response")
+
+    def test_invalid_prompt(self):
+        # Example part number to search
+        parts_to_search = "Bw4Aij7tfUsUA1FU"
+
+        response = search_mouser(parts_to_search)
+
+        self.assertIsNotNone(response)
+        self.assertIn('SearchResults', response)
+        self.assertEqual(response['SearchResults']['NumberOfResult'], 0)
+        self.assertEqual(response["SearchResults"]["Parts"], [])
