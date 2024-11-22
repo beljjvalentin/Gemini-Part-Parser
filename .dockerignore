@@ -1,0 +1,5 @@
+# .dockerignore allows you to skip files when you run "docker build"
+*.env
+*.pem
+*.key
+/tests
