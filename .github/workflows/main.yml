@@ -76,12 +76,12 @@ jobs:
     steps:
       - name: Remove old container
         run: |
-          docker rm -f gemini-app || true
+          docker rm -f gemini-api || true
 
       - name: Deploy the image
         # -d runs the container in the background
         run: |
-          docker run -d --name gemini-app -p 8080:5000 \
+          docker run -d --name gemini-api -p 8080:5000 \
           -e GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
           -e MOUSER_API_KEY=${{ secrets.MOUSER_API_KEY }} \
-          gemini-app:v1.0.0
+          gemini-api:v1.0.0
